@@ -49,10 +49,10 @@ def load_trails(training_config):
             test_accuracy = json.load(file)
             file.close()
 
-    return step_losses, train_losses, test_losses
+    return step_losses, train_losses, test_losses, train_accuracy, test_accuracy
 
 
-def train_test_loop(training_config, model, dataloader_train, dataloader_test, optimizer, creterian, step_losses, train_losses, test_losses, device):
+def train_test_loop(training_config, model, dataloader_train, dataloader_test, optimizer, creterian, step_losses, train_losses, test_losses, train_accuracy, test_accuracy, device):
     for epoch in range(training_config['num_of_epochs']):
         loss_sum_train = 0
         correct        = 0
@@ -78,6 +78,7 @@ def train_test_loop(training_config, model, dataloader_train, dataloader_test, o
         train_loss = loss_sum_train / len(dataloader_train)
         train_losses.append(train_loss)
         train_acc = correct / len(dataloader_train.dataset)
+        train_accuracy.append(train_acc)
 
 
 
@@ -104,6 +105,7 @@ def train_test_loop(training_config, model, dataloader_train, dataloader_test, o
         test_loss = loss_sum_test / len(dataloader_test)
         test_losses.append(test_loss)
         test_acc = correct / len(dataloader_test.dataset)
+        test_accuracy.append(test_acc)
 
 
 
@@ -144,7 +146,7 @@ def train(training_config):
     model = load_model(training_config['model_path_src']).to(device)
 
     #  load the losses history
-    step_losses, train_losses, test_losses = load_loss_history(training_config)
+    step_losses, train_losses, test_losses, train_accuracy, test_accuracy = load_trails(training_config)
 
 
 
@@ -195,7 +197,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_of_epochs"    , type=int   , help="number of epochs"                                  , default=20)
     parser.add_argument("--batch_size"       , type=int   , help="batch size"                                        , default=512)
-    parser.add_argument("--learning_rate"    , type=float , help="learning rate"                                     , default=1e-3)
+    parser.add_argument("--learning_rate"    , type=float , help="learning rate"                                     , default=5e-4)
     parser.add_argument("--weight_decay"     , type=float , help="weight_decay"                                      , default=1e-4)
     parser.add_argument("--vocab_size"       , type=int   , help="vocab size"                                        , default=21128)
     parser.add_argument("--embedding_dim"    , type=int   , help="embedding dimmention"                              , default=512)
@@ -208,6 +210,8 @@ if __name__ == "__main__":
     parser.add_argument("--step_losses_pth"  , type=str   , help="the path of the json file that saves step losses"  , default='./trails/step_losses.json')
     parser.add_argument("--train_losses_pth" , type=str   , help="the path of the json file that saves train losses" , default='./trails/train_losses.json')
     parser.add_argument("--test_losses_pth"  , type=str   , help="the path of the json file that saves test losses"  , default='./trails/test_losses.json')
+    parser.add_argument("--train_accuracy_pth" , type=str   , help="the path of the json file that saves train accuracy" , default='./trails/train_accuracy.json')
+    parser.add_argument("--test_accuracy_pth"  , type=str   , help="the path of the json file that saves test accuracy"  , default='./trails/test_accuracy.json')
 
     
     args = parser.parse_args()
