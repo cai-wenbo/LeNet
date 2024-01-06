@@ -18,7 +18,7 @@ def load_model(model_path_src):
 
     return model
 
-def load_loss_history(training_config):
+def load_trails(training_config):
     step_losses = list()
     if os.path.exists(training_config['step_losses_pth']):
         with open(training_config['step_losses_pth'], 'r') as file:
@@ -35,6 +35,18 @@ def load_loss_history(training_config):
     if os.path.exists(training_config['test_losses_pth']):
         with open(training_config['test_losses_pth'], 'r') as file:
             test_losses = json.load(file)
+            file.close()
+
+    train_accuracy = list()
+    if os.path.exists(training_config['train_accuracy_pth']):
+        with open(training_config['train_accuracy_pth'], 'r') as file:
+            train_accuracy = json.load(file)
+            file.close()
+    
+    test_accuracy = list()
+    if os.path.exists(training_config['test_accuracy_pth']):
+        with open(training_config['test_accuracy_pth'], 'r') as file:
+            test_accuracy = json.load(file)
             file.close()
 
     return step_losses, train_losses, test_losses
@@ -99,6 +111,27 @@ def train_test_loop(training_config, model, dataloader_train, dataloader_test, o
 
 
 
+def save_trails(training_config, step_losses, train_losses, test_losses, train_accuracy, test_accuracy):
+    with open(training_config['step_losses_pth'], 'w') as file:
+        json.dump(step_losses, file)
+        file.close()
+
+    with open(training_config['train_losses_pth'], 'w') as file:
+        json.dump(train_losses, file)
+        file.close()
+    
+    with open(training_config['test_losses_pth'], 'w') as file:
+        json.dump(test_losses, file)
+        file.close()
+
+    with open(training_config['train_accuracy_pth'], 'w') as file:
+        json.dump(train_accuracy, file)
+        file.close()
+    
+    with open(training_config['test_accuracy_pth'], 'w') as file:
+        json.dump(test_accuracy, file)
+        file.close()
+
 
 def train(training_config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
@@ -141,7 +174,7 @@ def train(training_config):
     '''
     train  and validate loops
     '''
-    train_test_loop(training_config, model, dataloader_train, dataloader_test, optimizer, creterian, step_losses, train_losses, test_losses, device)
+    train_test_loop(training_config, model, dataloader_train, dataloader_test, optimizer, creterian, step_losses, train_losses, test_losses, train_accuracy, test_accuracy, device)
 
 
         
@@ -153,18 +186,7 @@ def train(training_config):
     torch.save(model.state_dict(), training_config['model_path_dst'])
 
     #  save the loss of the steps
-    with open(training_config['step_losses_pth'], 'w') as file:
-        json.dump(step_losses, file)
-        file.close()
-
-    with open(training_config['train_losses_pth'], 'w') as file:
-        json.dump(train_losses, file)
-        file.close()
-    
-    with open(training_config['test_losses_pth'], 'w') as file:
-        json.dump(test_losses, file)
-        file.close()
-
+    save_trails(training_config, step_losses, train_losses, test_losses, train_accuracy, test_accuracy)
 
 
 
