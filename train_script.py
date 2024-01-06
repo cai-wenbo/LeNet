@@ -79,18 +79,15 @@ def train_test_loop(training_config, model, dataloader_train, dataloader_test, o
             batch = tuple(t.to(device) for t in batch)
             b_inputs, b_labels = batch
 
-            optimizer.zero_grad()
+            with torch.no_grad():
+                b_outputs = model(b_inputs)
+                loss = creterian(b_outputs, b_labels)
+                loss_scalar = loss.item()
+                loss_sum_test += loss_scalar
+                step_losses.append(loss_scalar)
 
-            b_outputs = model(b_inputs)
-            loss = creterian(b_outputs, b_labels)
-            loss.backward()
-            optimizer.step()
-            loss_scalar = loss.item()
-            loss_sum_test += loss_scalar
-            step_losses.append(loss_scalar)
-
-            b_predicts = torch.argmax(b_outputs, dim=-1)
-            correct += (b_predicts == b_labels).sum().item()
+                b_predicts = torch.argmax(b_outputs, dim=-1)
+                correct += (b_predicts == b_labels).sum().item()
 
         test_loss = loss_sum_test / len(dataloader_test)
         test_losses.append(test_loss)
@@ -111,7 +108,7 @@ def train(training_config):
     model
     load model and the history
     '''
-    model = load_model(training_config['model_path_src'])
+    model = load_model(training_config['model_path_src']).to(device)
 
     #  load the losses history
     step_losses, train_losses, test_losses = load_loss_history(training_config)
@@ -152,7 +149,7 @@ def train(training_config):
     save model and data
     '''
 
-    model = model.to('cpu').module
+    model = model.to('cpu')
     torch.save(model.state_dict(), training_config['model_path_dst'])
 
     #  save the loss of the steps
